@@ -13,3 +13,4 @@ if __name__ == '__main__':
 	# Preparing training data
 	imgs, labs = mnist.load_mnist('training', digits = [3])
 	# showImg(imgs[0])
+	
