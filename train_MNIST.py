@@ -2,7 +2,7 @@ import mnist
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-
+ 
 
 def showImg(img):
 	plt.imshow(img, cmap='Greys_r')
