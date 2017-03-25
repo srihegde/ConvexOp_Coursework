@@ -26,7 +26,7 @@ class NNClassifier:
 		input_layer_dim = len(X_train[0])
 		output_layer_dim = len( set(y_train) )
 
-		layer_sizes = [input_layer_dim] + self.hidden_layer_sizes + [output_layer_dim] 
+		layer_sizes = [input_layer_dim] + list( self.hidden_layer_sizes ) + [output_layer_dim] 
 
 		W_list, b_list = [], []
 	
@@ -44,6 +44,4 @@ class NNClassifier:
 			self.model['parameters']['W'][idx] = W_idx
 		for idx, b_idx in enumerate(b_list):
 			self.model['parameters']['b'][idx] = b_idx
-
-		return self
-		 
+	 
