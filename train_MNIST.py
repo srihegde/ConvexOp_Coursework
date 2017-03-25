@@ -2,7 +2,8 @@ import mnist
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
- 
+
+from neural_network import NNClassifier 
 
 def showImg(img):
 	plt.imshow(img, cmap='Greys_r')
@@ -48,4 +49,9 @@ if __name__ == '__main__':
 	fim8 = [i.flatten().tolist() for i in imgs_8]
 	test_data = fim3
 	test_data.extend(fim8)
+
+	clf = NNClassifier(hidden_layer_sizes = (50,)) 	
+	clf.fit(train_data, train_labels)
+	result = clf.predict(test_data)
+	print result.count(1), result.count(-1)
 
