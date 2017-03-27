@@ -3,55 +3,59 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
+from random import shuffle
 from neural_network import NNClassifier 
 
 def showImg(img):
 	plt.imshow(img, cmap='Greys_r')
 	plt.show()
 
+def prepareData(option, dig, size):
+	
+	imgs, labs = mnist.load_mnist(option, digits = [dig])
+	imgs_p = imgs[:size]
+
+	imgs_n = []
+	for i in xrange(10):
+		if i != dig:
+			imgs, labs1 = mnist.load_mnist(option, digits = [i])
+			imgs_n.extend(imgs[:(size/8)])
+
+	# Shuffle negative samples
+	shuffle(imgs_n)
+	imgs_n = imgs_n[:size]
+
+	labels = [1 for i in xrange(size)]
+	labels.extend([-1 for i in xrange(size)])
+
+
+	# Scaling the data between [0,1]
+	imgs_p = [np.divide(np.array(i,dtype=float),255.0) for i in imgs_p]
+	imgs_n = [np.divide(np.array(i,dtype=float),255.0) for i in imgs_n]
+
+	# Flatten into feature vector
+	fimp = [i.flatten().tolist() for i in imgs_p]
+	fimn = [i.flatten().tolist() for i in imgs_n]
+	data = fimp
+	data.extend(fimn)
+
+	return (data, labels)
+
+
+
 
 if __name__ == '__main__':
 
 	# Preparing training data
-	imgs, labs = mnist.load_mnist('training', digits = [3])
-	imgs_3 = imgs[:2000]
-	imgs, labs1 = mnist.load_mnist('training', digits = [8])
-	imgs_8 = imgs[:2000]
-	train_labels = [-1 for i in xrange(2000)]
-	train_labels.extend([1 for i in xrange(2000)])
-
-
-	# Scaling the data between [0,1]
-	imgs_3 = [np.divide(np.array(i,dtype=float),255.0) for i in imgs_3]
-	imgs_8 = [np.divide(np.array(i,dtype=float),255.0) for i in imgs_8]
-
-	# Flatten into feature vector
-	fim3 = [i.flatten().tolist() for i in imgs_3]
-	fim8 = [i.flatten().tolist() for i in imgs_8]
-	train_data = fim3
-	train_data.extend(fim8)
-
-
+	(train_data, train_labels) = prepareData('training', 3, 2000)
 	# Preparing testing data
-	imgs, labs = mnist.load_mnist('testing', digits = [3])
-	imgs_3 = imgs[:500]
-	imgs, labs1 = mnist.load_mnist('testing', digits = [8])
-	imgs_8 = imgs[:500]
-	test_labels = [-1 for i in xrange(500)]
-	test_labels.extend([1 for i in xrange(500)])
+	(test_data, test_labels) = prepareData('testing', 3, 500)
 
-	# Scaling the data between [0,1]
-	imgs_3 = [np.divide(np.array(i,dtype=float),255.0) for i in imgs_3]
-	imgs_8 = [np.divide(np.array(i,dtype=float),255.0) for i in imgs_8]
+	# print len(train_data), len(train_labels), len(test_data), len(test_data)
 
-	# Flatten into feature vector
-	fim3 = [i.flatten().tolist() for i in imgs_3]
-	fim8 = [i.flatten().tolist() for i in imgs_8]
-	test_data = fim3
-	test_data.extend(fim8)
 
+	# Initialize Neural Network and predict
 	clf = NNClassifier(hidden_layer_sizes = (50,)) 	
 	clf.fit(train_data, train_labels)
 	result = clf.predict(test_data)
 	print result.count(1), result.count(-1)
-

@@ -45,7 +45,7 @@ class NNClassifier:
 			b_list.append( np.zeros((1,layer_sizes[layer_no])) )
 		
 		#Train here using gradient descent
-
+		
 		
 		
 		#Update self.model with final parameters
