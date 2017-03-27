@@ -33,38 +33,50 @@ class NNClassifier:
 		for layer_no in xrange(self.no_of_layers-1):
 			z = a.dot(W_list[layer_no]) + b_list[layer_no]
 			a = np.tanh(z)
-			output.append(a)
+			output.append(np.transpose(a))
 
-		exp_score = np.exp(z)
-		probs = exp_score / np.sum(exp_score, axis=1, keepdims=True)
-		output.append(probs)
-
+		#exp_score = np.exp(z)
+		#probs = exp_score / np.sum(exp_score, axis=1, keepdims=True)
+		#output.append(np.transpose(probs))
 		return output
 
 	def backwardPass(self, expected, output, deltaList, W_list, b_list):
-		tmpdel = list()
-		for k in reversed(range(self.no_of_layers)):
+		
+		deltaList = list()
+		
+		for k in reversed(range(self.no_of_layers-1)):
 
 			errors = np.array(list())
-			if k != self.no_of_layers-1:
-				# errors = (W_list[k] + b_list[k]) * tmpdel[self.no_of_layers-k-2]
-				print W_list[k].shape, b_list[k].shape, np.array(tmpdel[self.no_of_layers-k-2]).shape
-				errors = (b_list[k].T * tmpdel[self.no_of_layers-k-2])# + (W_list[k].T * tmpdel[self.no_of_layers-k-2])
+
+			if k != self.no_of_layers-2:
+				errors = np.zeros( len(output[k]) ) 
+
+				#print "Shape check", len(output[k]), (W_list[k+1].T).shape, deltaList[-1].shape
+
+				errors = []
+				for neuron_no in xrange(len(output[k])):
+					error = 0
+					for neuron in xrange(len(output[k+1])):
+						error += W_list[k+1][neuron_no,neuron] * deltaList[-1][neuron] 
+					errors.append(error)
 			else:
 				errors = output[k] - expected
+				#print "ERRZ", errors
 
-			tmpdel.append(errors * self.act_derivative(output[k]))
-		return tmpdel
+			deltaList.append(errors * self.act_derivative(output[k]))
 
+		return deltaList[::-1] #Reverse it
 
-	def updateWeights(self, sample,output, deltaList, W_list, b_list):
-		for i in range(self.no_of_layers):
+	def updateWeights(self, sample, output, deltaList, W_list, b_list):
+
+		for i in range(self.no_of_layers-1):
 			inputs = sample
 			if i != 0:
 				inputs = output[i-1]
 
-			W_list[i] = self.learning_rate_init*deltaList[i]*inputs
-			b_list[i] = self.learning_rate_init*deltaList[i]
+			for inp_no, inp in enumerate(inputs): 
+				W_list[i][inp_no,:] += self.learning_rate_init*deltaList[i]*inp
+			b_list[i] += self.learning_rate_init*deltaList[i]
 
 		return (W_list,b_list)
 		
@@ -76,11 +88,23 @@ class NNClassifier:
 			for j in xrange(len(X_train)):
 
 				output = self.forwardPass(X_train[j], W_list, b_list)
+
 				expected = np.array([0 for i in range(self.output_layer_dim)])
 				expected[(y_train[j]+1)%self.output_layer_dim] = 1
+			
+				#deltaList = [ np.random.randn(len(W_list[i][0])) for i in xrange(self.no_of_layers-1) ]
+
+				# print "Shapes should be : "
+				# for d in deltaList : print d.shape
+
 				deltaList = self.backwardPass(expected, output, deltaList, W_list, b_list)
+
+				# print "But I get shapes : "
+				# for d in deltaList : print d.shape
+
+				#print deltaList
 				(W_list, b_list) = self.updateWeights(X_train[j], output, deltaList, W_list, b_list)
-	
+				
 		return (W_list,b_list)
 
 
@@ -105,13 +129,16 @@ class NNClassifier:
 	
 		for layer_no in xrange(1, self.no_of_layers):
 			W_list.append( np.random.randn(layer_sizes[layer_no-1], layer_sizes[layer_no]) / np.sqrt(layer_sizes[layer_no-1]) )
-			b_list.append( np.zeros((1,layer_sizes[layer_no])) )
-		
+			b_list.append( np.zeros((layer_sizes[layer_no])) )
+	
+		for i,w in enumerate(W_list): print "Layer ", i,i+1, " parameters shape :", w.shape
+		for i,b in enumerate(b_list) : print "Layer ", i,i+1, " bias shape :", b.shape
+		print
+		#print W_list, b_list		
 		#Train here using gradient descent
 		
 		(W_list, b_list) = self.trainSGD(W_list, b_list, X_train, y_train, num_passes)
 		
-
 		#Update self.model with final parameters
 		
 		for idx, W_idx in enumerate(W_list):
@@ -131,8 +158,6 @@ class NNClassifier:
 		
 		exp_score = np.exp(z)
 		probs = exp_score / np.sum(exp_score, axis=1, keepdims=True)
-
-    		#print probs
 	
 		raw_labels = np.argmax(probs, axis=1)
 		return [ self.output_label_map[label] for label in raw_labels ]

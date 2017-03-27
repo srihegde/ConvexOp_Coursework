@@ -41,21 +41,18 @@ def prepareData(option, dig, size):
 
 	return (data, labels)
 
-
-
-
 if __name__ == '__main__':
 
 	# Preparing training data
-	(train_data, train_labels) = prepareData('training', 3, 2000)
+	(train_data, train_labels) = prepareData('training', 3, 300)
 	# Preparing testing data
-	(test_data, test_labels) = prepareData('testing', 3, 500)
+	(test_data, test_labels) = prepareData('testing', 3, 100)
 
 	# print len(train_data), len(train_labels), len(test_data), len(test_data)
-
 
 	# Initialize Neural Network and predict
 	clf = NNClassifier(hidden_layer_sizes = (5,)) 	
 	clf.fit(train_data, train_labels)
 	result = clf.predict(test_data)
-	print result.count(1), result.count(-1)
+
+	print result.count(1), result.count(0)
