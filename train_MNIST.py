@@ -26,7 +26,7 @@ def prepareData(option, dig, size):
 	imgs_n = imgs_n[:size]
 
 	labels = [1 for i in xrange(size)]
-	labels.extend([-1 for i in xrange(size)])
+	labels.extend([0 for i in xrange(size)])
 
 
 	# Scaling the data between [0,1]
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
 
 	# Initialize Neural Network and predict
-	clf = NNClassifier(hidden_layer_sizes = (50,)) 	
+	clf = NNClassifier(hidden_layer_sizes = (5,)) 	
 	clf.fit(train_data, train_labels)
 	result = clf.predict(test_data)
 	print result.count(1), result.count(-1)

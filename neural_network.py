@@ -19,9 +19,72 @@ class NNClassifier:
 		self.model['parameters'] = {}
 		self.model['parameters']['W'] = {}
 		self.model['parameters']['b'] = {}
-		self.output_label_map = {} 
+		self.output_label_map = {}
+
+	def act_derivative(self, output):
+		if (self.activation == 'sigmoid'):
+			return output * (1.0 - output)
+		elif self.activation == 'tanh':
+			return 1 - output*output
+
+	def forwardPass(self, sample, W_list, b_list):
+		a,z = np.array(sample),0
+		output = list()
+		for layer_no in xrange(self.no_of_layers-1):
+			z = a.dot(W_list[layer_no]) + b_list[layer_no]
+			a = np.tanh(z)
+			output.append(a)
+
+		exp_score = np.exp(z)
+		probs = exp_score / np.sum(exp_score, axis=1, keepdims=True)
+		output.append(probs)
+
+		return output
+
+	def backwardPass(self, expected, output, deltaList, W_list, b_list):
+		tmpdel = list()
+		for k in reversed(range(self.no_of_layers)):
+
+			errors = np.array(list())
+			if k != self.no_of_layers-1:
+				# errors = (W_list[k] + b_list[k]) * tmpdel[self.no_of_layers-k-2]
+				print W_list[k].shape, b_list[k].shape, np.array(tmpdel[self.no_of_layers-k-2]).shape
+				errors = (b_list[k].T * tmpdel[self.no_of_layers-k-2])# + (W_list[k].T * tmpdel[self.no_of_layers-k-2])
+			else:
+				errors = output[k] - expected
+
+			tmpdel.append(errors * self.act_derivative(output[k]))
+		return tmpdel
+
+
+	def updateWeights(self, sample,output, deltaList, W_list, b_list):
+		for i in range(self.no_of_layers):
+			inputs = sample
+			if i != 0:
+				inputs = output[i-1]
+
+			W_list[i] = self.learning_rate_init*deltaList[i]*inputs
+			b_list[i] = self.learning_rate_init*deltaList[i]
+
+		return (W_list,b_list)
+		
+
+	def trainSGD(self, W_list, b_list, X_train, y_train, num_passes):
+		
+		deltaList=list()
+		for i in xrange(num_passes):
+			for j in xrange(len(X_train)):
+
+				output = self.forwardPass(X_train[j], W_list, b_list)
+				expected = np.array([0 for i in range(self.output_layer_dim)])
+				expected[(y_train[j]+1)%self.output_layer_dim] = 1
+				deltaList = self.backwardPass(expected, output, deltaList, W_list, b_list)
+				(W_list, b_list) = self.updateWeights(X_train[j], output, deltaList, W_list, b_list)
 	
-	def fit(self, X_train, y_train):
+		return (W_list,b_list)
+
+
+	def fit(self, X_train, y_train, num_passes=20):
 		
 		assert(len(X_train) == len(y_train) and len(X_train) > 0)
 			
@@ -46,8 +109,9 @@ class NNClassifier:
 		
 		#Train here using gradient descent
 		
+		(W_list, b_list) = self.trainSGD(W_list, b_list, X_train, y_train, num_passes)
 		
-		
+
 		#Update self.model with final parameters
 		
 		for idx, W_idx in enumerate(W_list):
