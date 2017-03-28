@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # Solver - {'sgd'}
 
 class NNClassifier:
-	def __init__(self, activation = 'tanh', solver = 'sgd', hidden_layer_sizes = (100,), alpha = 0.0001, batch_size = 'auto', learning_rate_init = 0.001):   
+	def __init__(self, activation = 'tanh', solver = 'sgd', hidden_layer_sizes = (100,), alpha = 0.0001, batch_size = 'auto', learning_rate_init = 0.05):   
 		self.activation = activation
 		self.solver = solver
 		self.hidden_layer_sizes = hidden_layer_sizes
@@ -40,7 +40,7 @@ class NNClassifier:
 		#output.append(np.transpose(probs))
 		return output
 
-	def backwardPass(self, expected, output, deltaList, W_list, b_list):
+	def backwardPass(self, expected, output, W_list, b_list):
 		
 		deltaList = list()
 		
@@ -60,7 +60,7 @@ class NNClassifier:
 						error += W_list[k+1][neuron_no,neuron] * deltaList[-1][neuron] 
 					errors.append(error)
 			else:
-				errors = output[k] - expected
+				errors = expected - output[k] 
 				#print "ERRZ", errors
 
 			deltaList.append(errors * self.act_derivative(output[k]))
@@ -83,21 +83,20 @@ class NNClassifier:
 
 	def trainSGD(self, W_list, b_list, X_train, y_train, num_passes):
 		
-		deltaList=list()
 		for i in xrange(num_passes):
 			for j in xrange(len(X_train)):
 
 				output = self.forwardPass(X_train[j], W_list, b_list)
 
 				expected = np.array([0 for i in range(self.output_layer_dim)])
-				expected[(y_train[j]+1)%self.output_layer_dim] = 1
+				expected[y_train[j]] = 1
 			
 				#deltaList = [ np.random.randn(len(W_list[i][0])) for i in xrange(self.no_of_layers-1) ]
 
 				# print "Shapes should be : "
 				# for d in deltaList : print d.shape
 
-				deltaList = self.backwardPass(expected, output, deltaList, W_list, b_list)
+				deltaList = self.backwardPass(expected, output, W_list, b_list)
 
 				# print "But I get shapes : "
 				# for d in deltaList : print d.shape
@@ -108,7 +107,7 @@ class NNClassifier:
 		return (W_list,b_list)
 
 
-	def fit(self, X_train, y_train, num_passes=20):
+	def fit(self, X_train, y_train, num_passes=100):
 		
 		assert(len(X_train) == len(y_train) and len(X_train) > 0)
 			
@@ -118,10 +117,10 @@ class NNClassifier:
 		self.input_layer_dim = len(X_train[0])
 		self.output_layer_dim = len( set(y_train) )
 		
-		#TO-DO 
-		#Actually verify this label mapping after implementing gradient descent
-		for idx, label in enumerate( set(y_train) ):
-			self.output_label_map[idx] = label 
+		# #TO-DO 
+		# #Actually verify this label mapping after implementing gradient descent
+		# for idx, label in enumerate( set(y_train) ):
+		# 	self.output_label_map[idx] = label 
 
 		layer_sizes = [self.input_layer_dim] + list( self.hidden_layer_sizes ) + [self.output_layer_dim] 
 
@@ -156,8 +155,11 @@ class NNClassifier:
 			z = a.dot(self.model['parameters']['W'][layer_no]) + self.model['parameters']['b'][layer_no]
 			a = np.tanh(z) 
 		
-		exp_score = np.exp(z)
-		probs = exp_score / np.sum(exp_score, axis=1, keepdims=True)
+		#print a
+
+		#exp_score = np.exp(z)
+		#probs = exp_score / np.sum(exp_score, axis=1, keepdims=True)
 	
-		raw_labels = np.argmax(probs, axis=1)
+		raw_labels = np.argmax(a, axis=1)
+		return list(raw_labels)
 		return [ self.output_label_map[label] for label in raw_labels ]

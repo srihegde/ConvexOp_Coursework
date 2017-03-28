@@ -44,15 +44,27 @@ def prepareData(option, dig, size):
 if __name__ == '__main__':
 
 	# Preparing training data
-	(train_data, train_labels) = prepareData('training', 3, 300)
+	(train_data, train_labels) = prepareData('training', 3, 200)
 	# Preparing testing data
 	(test_data, test_labels) = prepareData('testing', 3, 100)
 
 	# print len(train_data), len(train_labels), len(test_data), len(test_data)
 
 	# Initialize Neural Network and predict
-	clf = NNClassifier(hidden_layer_sizes = (5,)) 	
+	clf = NNClassifier(hidden_layer_sizes = (3,)) 	
 	clf.fit(train_data, train_labels)
 	result = clf.predict(test_data)
 
+	tp = 0
+	fp = 0
+	correct = 0
+	for i in xrange(len(test_labels)):
+		if(test_labels[i] == 1 and result[i] == 1): tp += 1
+		if(test_labels[i] == 1 and result[i] == 0): fp += 1 
+		if(test_labels[i] == result[i]): correct += 1
+
 	print result.count(1), result.count(0)
+
+	print "Accuracy : ", float(correct)/len(test_labels)
+	print "Precision : ", float(tp)/result.count(1)
+	print "Recall : ", float(tp)/(fp + tp)
