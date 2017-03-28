@@ -2,9 +2,11 @@ import mnist
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import pickle
 
-from random import shuffle
 from neural_network import NNClassifier 
+
+np.random.seed(42)
 
 def showImg(img):
 	plt.imshow(img, cmap='Greys_r')
@@ -22,12 +24,11 @@ def prepareData(option, dig, size):
 			imgs_n.extend(imgs[:(size/8)])
 
 	# Shuffle negative samples
-	shuffle(imgs_n)
+	np.random.shuffle(imgs_n)
 	imgs_n = imgs_n[:size]
 
 	labels = [1 for i in xrange(size)]
 	labels.extend([0 for i in xrange(size)])
-
 
 	# Scaling the data between [0,1]
 	imgs_p = [np.divide(np.array(i,dtype=float),255.0) for i in imgs_p]
@@ -44,16 +45,23 @@ def prepareData(option, dig, size):
 if __name__ == '__main__':
 
 	# Preparing training data
-	(train_data, train_labels) = prepareData('training', 3, 200)
+	(train_data, train_labels) = prepareData('training', 1, 500)
 	# Preparing testing data
-	(test_data, test_labels) = prepareData('testing', 3, 100)
+	(test_data, test_labels) = prepareData('testing', 1, 100)
 
 	# print len(train_data), len(train_labels), len(test_data), len(test_data)
 
 	# Initialize Neural Network and predict
-	clf = NNClassifier(hidden_layer_sizes = (3,)) 	
-	clf.fit(train_data, train_labels)
+	# clf = NNClassifier(hidden_layer_sizes = (5,), learning_rate_init = 0.05, num_passes = 200) 	
+	# clf.fit(train_data, train_labels)
+
+	# pickle.dump(clf, open("model_1_500.p","wb"))
+
+	clf = pickle.load( open("model_1_500.p", "rb") )
+
 	result = clf.predict(test_data)
+
+	#Results
 
 	tp = 0
 	fp = 0

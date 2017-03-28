@@ -3,18 +3,20 @@ import sklearn
 import sklearn.datasets
 import matplotlib.pyplot as plt
 
+np.random.seed(42)
 # Note : current support only for
 # Activation - {'tanh'}
 # Solver - {'sgd'}
 
 class NNClassifier:
-	def __init__(self, activation = 'tanh', solver = 'sgd', hidden_layer_sizes = (100,), alpha = 0.0001, batch_size = 'auto', learning_rate_init = 0.05):   
+	def __init__(self, activation = 'tanh', solver = 'sgd', hidden_layer_sizes = (100,), alpha = 0.0001, batch_size = 'auto', learning_rate_init = 0.05, num_passes = 50):   
 		self.activation = activation
 		self.solver = solver
 		self.hidden_layer_sizes = hidden_layer_sizes
 		self.alpha = alpha
 		self.batch_size = batch_size
 		self.learning_rate_init = learning_rate_init
+		self.num_passes = num_passes
 		self.model = {}
 		self.model['parameters'] = {}
 		self.model['parameters']['W'] = {}
@@ -37,7 +39,6 @@ class NNClassifier:
 
 		#exp_score = np.exp(z)
 		#probs = exp_score / np.sum(exp_score, axis=1, keepdims=True)
-		#output.append(np.transpose(probs))
 		return output
 
 	def backwardPass(self, expected, output, W_list, b_list):
@@ -46,19 +47,14 @@ class NNClassifier:
 		
 		for k in reversed(range(self.no_of_layers-1)):
 
-			errors = np.array(list())
-
 			if k != self.no_of_layers-2:
-				errors = np.zeros( len(output[k]) ) 
-
-				#print "Shape check", len(output[k]), (W_list[k+1].T).shape, deltaList[-1].shape
-
 				errors = []
 				for neuron_no in xrange(len(output[k])):
 					error = 0
 					for neuron in xrange(len(output[k+1])):
 						error += W_list[k+1][neuron_no,neuron] * deltaList[-1][neuron] 
 					errors.append(error)
+				errors = np.array(errors)
 			else:
 				errors = expected - output[k] 
 				#print "ERRZ", errors
@@ -91,23 +87,14 @@ class NNClassifier:
 				expected = np.array([0 for i in range(self.output_layer_dim)])
 				expected[y_train[j]] = 1
 			
-				#deltaList = [ np.random.randn(len(W_list[i][0])) for i in xrange(self.no_of_layers-1) ]
-
-				# print "Shapes should be : "
-				# for d in deltaList : print d.shape
-
 				deltaList = self.backwardPass(expected, output, W_list, b_list)
 
-				# print "But I get shapes : "
-				# for d in deltaList : print d.shape
-
-				#print deltaList
 				(W_list, b_list) = self.updateWeights(X_train[j], output, deltaList, W_list, b_list)
 				
 		return (W_list,b_list)
 
 
-	def fit(self, X_train, y_train, num_passes=100):
+	def fit(self, X_train, y_train):
 		
 		assert(len(X_train) == len(y_train) and len(X_train) > 0)
 			
@@ -133,10 +120,9 @@ class NNClassifier:
 		for i,w in enumerate(W_list): print "Layer ", i,i+1, " parameters shape :", w.shape
 		for i,b in enumerate(b_list) : print "Layer ", i,i+1, " bias shape :", b.shape
 		print
-		#print W_list, b_list		
-		#Train here using gradient descent
-		
-		(W_list, b_list) = self.trainSGD(W_list, b_list, X_train, y_train, num_passes)
+
+		#Train here using gradient descent		
+		(W_list, b_list) = self.trainSGD(W_list, b_list, X_train, y_train, self.num_passes)
 		
 		#Update self.model with final parameters
 		
@@ -155,11 +141,6 @@ class NNClassifier:
 			z = a.dot(self.model['parameters']['W'][layer_no]) + self.model['parameters']['b'][layer_no]
 			a = np.tanh(z) 
 		
-		#print a
-
-		#exp_score = np.exp(z)
-		#probs = exp_score / np.sum(exp_score, axis=1, keepdims=True)
-	
 		raw_labels = np.argmax(a, axis=1)
 		return list(raw_labels)
-		return [ self.output_label_map[label] for label in raw_labels ]
+		#return [ self.output_label_map[label] for label in raw_labels ]
