@@ -17,3 +17,5 @@ This implementation uses **Stochastic Gradient Descent** algorithm - an online a
 
 ### Experiment and Result
 In the present implementation we have included a pre-trained neural network model with 1 and 2 hidden layers on MNIST dataset. In both the cases all the hidden layers have 5 neurons. The models are trained with sigmoid activation function on all layers and the loss function we have used is MSE. We have plotted below the results of classifying digit '1' vs all other digits.
+
+![Alt text](./image.png?raw=true "Results based on Accuracy, Precision and Recall for different testing data sizes.")
