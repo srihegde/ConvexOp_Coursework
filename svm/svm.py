@@ -64,10 +64,8 @@ class svm():
 						continue
 
 					alphas[j] -= (y_train[j]*(E_i - E_j)/eta)
-					if alphas[j] > H:
-						alphas[j] = H
-					elif alphas[j] < L:
-						alphas[j] = L
+					if alphas[j] > H: alphas[j] = H
+					elif alphas[j] < L: alphas[j] = L
 
 					if math.fabs(alphas[j] - alpha_j_old) < 1e-5:
 						continue
@@ -103,5 +101,17 @@ class svm():
 		pass
 
 	# Returns the mean accuracy on the given test data and labels
-	def score(self, x_test, y_test, y_pred):
-		pass
+	def score(self, y_test, y_pred):
+		tp = 0
+		fp = 0
+		correct = 0
+		for i in xrange(len(y_test)):
+			if(y_test[i] == 1 and y_pred[i] == 1): tp += 1
+			if(y_test[i] == 1 and y_pred[i] == 0): fp += 1 
+			if(y_test[i] == y_pred[i]): correct += 1
+
+		acc = float(correct)/len(y_test)
+		precision = float(tp)/result.count(1)
+		recall = float(tp)/(fp + tp)
+
+		return (acc, precision, recall)

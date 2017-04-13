@@ -69,17 +69,3 @@ if __name__ == '__main__':
 	# print len(test_data), len(result), len(test_labels)
 
 	#Results
-
-	'''tp = 0
-	fp = 0
-	correct = 0
-	for i in xrange(len(test_labels)):
-		if(test_labels[i] == 1 and result[i] == 1): tp += 1
-		if(test_labels[i] == 1 and result[i] == 0): fp += 1 
-		if(test_labels[i] == result[i]): correct += 1
-
-	print result.count(1), result.count(0)
-
-	print "Accuracy : ", float(correct)/len(test_labels)
-	print "Precision : ", float(tp)/result.count(1)
-	print "Recall : ", float(tp)/(fp + tp)'''
