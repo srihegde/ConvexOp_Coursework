@@ -1,16 +1,21 @@
 import numpy as np
 import math
+import datetime
 from random import randint
 
 # Class for defining the SVM functionalities
-class svm():
+class SVM():
 
-	def __init__(self, C = 1.0, kernel = 'none', gsigma = 1.0, tol = 1e-3, max_passes = 1000):
+	def __init__(self, C = 1.0, kernel = 'none', gsigma = 1.0, tol = 1e-3, max_passes = 10):
 		self.C = C
 		self.kernel = kernel
 		self.gsigma = gsigma
 		self.tol = tol
 		self.max_passes = max_passes
+		self.alphas = np.zeros((1,))
+		self.b = 0.
+		self.x_train = 0
+		self.y_train = 0
 
 
 
@@ -39,7 +44,7 @@ class svm():
 					f_x += ((alphas[j] * y_train[j] * self.kernel_fn(x_train[j], x_train[i])) + b)
 				E_i = f_x - y_train[i]
 
-				if (E_i*y_train[i] < -tol and alphas[i] < self.C) or (E_i*y_train[i] > tol and alphas[i] > 0):
+				if (E_i*y_train[i] < -self.tol and alphas[i] < self.C) or (E_i*y_train[i] > self.tol and alphas[i] > 0):
 					j = randint(0, len(x_train)-2)
 					if j == i:
 						j = len(x_train)-1
@@ -88,17 +93,33 @@ class svm():
 			else:
 				passes = 0
 
+			print '{:%Y-%m-%d_%H:%M:%S}'.format(datetime.datetime.now())+' Iteration #', passes," :"
+
 		return (alphas, b)
 
 
 
-	# Fits the SVM model according to the given training data
+	# Fits the SVM model according to training data and algorithm
 	def fit(self, x_train, y_train):
-		pass
+		self.x_train, self.y_train = x_train, y_train
+		(self.alphas, self.b) = self.SMO_naive(x_train, y_train)
+
 
 	# Performs classification on samples in X
 	def predict(self, x_test):
-		pass
+		
+		y_pred = np.zeros(len(x_test))
+		for j in xrange(len(x_test)):
+			s = 0
+			for i in xrange(len(self.x_train)):
+				s += self.alphas[i]* self.y_train[i]*self.kernel_fn(x_test[j], self.x_train[i])
+			s += self.b
+			if s >= 0: y_pred[j] = 1
+			elif s < 0: y_pred[j] = 0
+
+		# print y_pred.tolist().count(1), y_pred.tolist().count(0)
+		return y_pred
+
 
 	# Returns the mean accuracy on the given test data and labels
 	def score(self, y_test, y_pred):
@@ -111,7 +132,7 @@ class svm():
 			if(y_test[i] == y_pred[i]): correct += 1
 
 		acc = float(correct)/len(y_test)
-		precision = float(tp)/result.count(1)
+		precision = float(tp)/y_pred.tolist().count(1)
 		recall = float(tp)/(fp + tp)
 
 		return (acc, precision, recall)

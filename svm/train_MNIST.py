@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 
+import svm
 
 np.random.seed(42)
 
@@ -47,25 +48,26 @@ def prepareData(option, dig, size):
 if __name__ == '__main__':
 
 	# Preparing training data
-	(train_data, train_labels) = prepareData('training', 1, 500)
+	(train_data, train_labels) = prepareData('training', 1, 200)
 	# Preparing testing data
-	(test_data, test_labels) = prepareData('testing', 1, 500)
+	(test_data, test_labels) = prepareData('testing', 1, 200)
 
 	if(len(test_data) != len(test_labels)):
 		print 'Changing data size to ', len(test_data)
 		test_labels = test_labels[:len(test_data)]
 
-	print len(train_data), len(train_labels), len(test_data), len(test_data)
+	print 'Training Data size:', len(train_data) 
+	print 'Testing Data size:', len(test_data)
 
-	# Initialize Neural Network and predict
-	# clf = NNClassifier(hidden_layer_sizes = (5,5), learning_rate_init = 0.05, num_passes = 50) 	
+	# Initialize svm and predict
+	# clf = svm.SVM()
 	# clf.fit(train_data, train_labels)
+	# pickle.dump(clf, open("./models/model_1_400.p","wb"))
+	clf = pickle.load( open("./models/model_1_400.p", "rb") )
 
-	# pickle.dump(clf, open("./models/model_2_500.p","wb"))
-
-	# clf = pickle.load( open("./models/model_2_500.p", "rb") )
-
-	# result = clf.predict(test_data)
-	# print len(test_data), len(result), len(test_labels)
-
-	#Results
+	# Results
+	test_pred = clf.predict(test_data)
+	(acc, prec, recall) = clf.score(test_labels, test_pred)
+	print 'Accuracy = ',acc
+	print 'Precision = ',prec
+	print 'Recall = ',recall
